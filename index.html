@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .score {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .shop-item {
+            border: 1px solid #eee;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .shop-item h4 {
+            margin: 0 0 5px 0;
+        }
+        .shop-item p {
+            margin: 5px 0;
+            color: #666;
+        }
+        #localLeaderboard {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        .lang-switch {
+            margin: 5px 0 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="gameTitle">点击游戏</h1>
+    <div class="subtitle" id="gameSubtitle">点击按钮增加分数</div>
+    <div class="score" id="scoreDisplay">当前分数: 0</div>
+
+    <button id="clickBtn" onclick="addScore(1)">点我 +1</button>
+    <button id="resetBtn" onclick="resetGame()">重置游戏</button>
+    <button id="submitBtn" onclick="submitLocalScore()">提交到本地排行榜</button>
+
+    <div class="lang-switch">
+        <button onclick="switchLang('zh')">中文</button>
+        <button onclick="switchLang('en')">English</button>
+    </div>
+
+    <h3 id="shopTitle">商店</h3>
+    <div class="shop-item">
+        <h4 id="basicName">初级点击器</h4>
+        <p id="basicEffect">效果: 每秒自动 +1</p>
+        <p id="basicPrice">价格: 100分 | 已拥有: <span id="basicOwned">0</span></p>
+        <button id="basicBuyBtn" onclick="buyItem('basic', 100, 1)">购买 (100)</button>
+    </div>
+    <div class="shop-item">
+        <h4 id="advancedName">高级点击器</h4>
+        <p id="advancedEffect">效果: 每秒自动 +5</p>
+        <p id="advancedPrice">价格: 500分 | 已拥有: <span id="advancedOwned">0</span></p>
+        <button id="advancedBuyBtn" onclick="buyItem('advanced', 500, 5)">购买 (500)</button>
+    </div>
+    <div class="shop-item">
+        <h4 id="superName">超级点击器</h4>
+        <p id="superEffect">效果: 每秒自动 +20</p>
+        <p id="superPrice">价格: 2000分 | 已拥有: <span id="superOwned">0</span></p>
+        <button id="superBuyBtn" onclick="buyItem('super', 2000, 20)">购买 (2000)</button>
+    </div>
+
+    <h3 id="leaderboardTitle">本地排行榜</h3>
+    <div id="localLeaderboard">暂无记录</div>
+
+    <script>
+        let score = 0;
+        let items = {
+            basic: { count: 0, perSec: 1 },
+            advanced: { count: 0, perSec: 5 },
+            super: { count: 0, perSec: 20 }
+        };
+
+        const translations = {
+            zh: {
+                pageTitle: "点击游戏",
+                gameTitle: "点击游戏",
+                gameSubtitle: "点击按钮增加分数",
+                scoreDisplay: "当前分数: ",
+                clickBtn: "点我 +1",
+                resetBtn: "重置游戏",
+                submitBtn: "提交到本地排行榜",
+                shopTitle: "商店",
+                basicName: "初级点击器",
+                basicEffect: "效果: 每秒自动 +1",
+                basicPricePrefix: "价格: 100分 | 已拥有: ",
+                basicBuyBtn: "购买 (100)",
+                advancedName: "高级点击器",
+                advancedEffect: "效果: 每秒自动 +5",
+                advancedPricePrefix: "价格: 500分 | 已拥有: ",
+                advancedBuyBtn: "购买 (500)",
+                superName: "超级点击器",
+                superEffect: "效果: 每秒自动 +20",
+                superPricePrefix: "价格: 2000分 | 已拥有: ",
+                superBuyBtn: "购买 (2000)",
+                leaderboardTitle: "本地排行榜",
+                noRecords: "暂无记录",
+                alertInsufficient: "分数不足！",
+                confirmReset: "确定要重置游戏吗？",
+                alertSubmitted: "已提交到本地排行榜！"
+            },
+            en: {
+                pageTitle: "Click Game",
+                gameTitle: "Click Game",
+                gameSubtitle: "Click the button to increase your score",
+                scoreDisplay: "Current Score: ",
+                clickBtn: "Click +1",
+                resetBtn: "Reset Game",
+                submitBtn: "Submit to Local Leaderboard",
+                shopTitle: "Shop",
+                basicName: "Basic Clicker",
+                basicEffect: "Effect: +1 per second",
+                basicPricePrefix: "Price: 100 | Owned: ",
+                basicBuyBtn: "Buy (100)",
+                advancedName: "Advanced Clicker",
+                advancedEffect: "Effect: +5 per second",
+                advancedPricePrefix: "Price: 500 | Owned: ",
+                advancedBuyBtn: "Buy (500)",
+                superName: "Super Clicker",
+                superEffect: "Effect: +20 per second",
+                superPricePrefix: "Price: 2000 | Owned: ",
+                superBuyBtn: "Buy (2000)",
+                leaderboardTitle: "Local Leaderboard",
+                noRecords: "No records yet",
+                alertInsufficient: "Insufficient score!",
+                confirmReset: "Are you sure you want to reset the game?",
+                alertSubmitted: "Submitted to local leaderboard!"
+            }
+        };
+
+        let currentLang = 'zh';
+
+        // 保存游戏
+        function saveGame() {
+            const saveData = {
+                score: score,
+                items: items,
+                lang: currentLang
+            };
+            localStorage.setItem('clickGameSave', JSON.stringify(saveData));
+        }
+
+        // 加载游戏
+        function loadGame() {
+            const saveData = JSON.parse(localStorage.getItem('clickGameSave'));
+            if (saveData) {
+                score = saveData.score || 0;
+                if (saveData.items) {
+                    items = saveData.items;
+                }
+                currentLang = saveData.lang || 'zh';
+            }
+            switchLang(currentLang);
+            updateScore();
+            updateOwnedCounts();
+        }
+
+        function updateScore() {
+            document.getElementById('scoreDisplay').textContent = translations[currentLang].scoreDisplay + score;
+        }
+
+        function addScore(amount) {
+            score += amount;
+            updateScore();
+            saveGame();
+        }
+
+        function buyItem(type, price, perSec) {
+            if (score >= price) {
+                score -= price;
+                items[type].count += 1;
+                updateScore();
+                updateOwnedCounts();
+                saveGame();
+            } else {
+                alert(translations[currentLang].alertInsufficient);
+            }
+        }
+
+        function updateOwnedCounts() {
+            document.getElementById('basicOwned').textContent = items.basic.count;
+            document.getElementById('advancedOwned').textContent = items.advanced.count;
+            document.getElementById('superOwned').textContent = items.super.count;
+        }
+
+        // 自动加分
+        setInterval(() => {
+            let perSec = 0;
+            for (let key in items) {
+                perSec += items[key].count * items[key].perSec;
+            }
+            if (perSec > 0) {
+                score += perSec;
+                updateScore();
+                saveGame();
+            }
+        }, 1000);
+
+        function resetGame() {
+            if (confirm(translations[currentLang].confirmReset)) {
+                score = 0;
+                items = {
+                    basic: { count: 0, perSec: 1 },
+                    advanced: { count: 0, perSec: 5 },
+                    super: { count: 0, perSec: 20 }
+                };
+                updateScore();
+                updateOwnedCounts();
+                localStorage.removeItem('localLeaderboard');
+                updateLocalLeaderboard();
+                saveGame();
+            }
+        }
+
+        function submitLocalScore() {
+            let leaderboard = JSON.parse(localStorage.getItem('localLeaderboard')) || [];
+            leaderboard.push({ score: score, time: new Date().toLocaleString() });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10);
+            localStorage.setItem('localLeaderboard', JSON.stringify(leaderboard));
+            updateLocalLeaderboard();
+            alert(translations[currentLang].alertSubmitted);
+        }
+
+        function updateLocalLeaderboard() {
+            let leaderboard = JSON.parse(localStorage.getItem('localLeaderboard')) || [];
+            let html = '';
+            if (leaderboard.length === 0) {
+                html = translations[currentLang].noRecords;
+            } else {
+                leaderboard.forEach((entry, index) => {
+                    html += `<p>${index + 1}. ${entry.score} ${currentLang === 'en' ? 'points' : '分'} - ${entry.time}</p>`;
+                });
+            }
+            document.getElementById('localLeaderboard').innerHTML = html;
+        }
+
+        function switchLang(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.title = t.pageTitle;
+            document.documentElement.lang = lang;
+            document.getElementById('gameTitle').textContent = t.gameTitle;
+            document.getElementById('gameSubtitle').textContent = t.gameSubtitle;
+            document.getElementById('clickBtn').textContent = t.clickBtn;
+            document.getElementById('resetBtn').textContent = t.resetBtn;
+            document.getElementById('submitBtn').textContent = t.submitBtn;
+            document.getElementById('shopTitle').textContent = t.shopTitle;
+            document.getElementById('basicName').textContent = t.basicName;
+            document.getElementById('basicEffect').textContent = t.basicEffect;
+            // 只更新价格前缀，不覆盖整个p标签，保留span
+            document.getElementById('basicPrice').firstChild.textContent = t.basicPricePrefix;
+            document.getElementById('basicBuyBtn').textContent = t.basicBuyBtn;
+            document.getElementById('advancedName').textContent = t.advancedName;
+            document.getElementById('advancedEffect').textContent = t.advancedEffect;
+            document.getElementById('advancedPrice').firstChild.textContent = t.advancedPricePrefix;
+            document.getElementById('advancedBuyBtn').textContent = t.advancedBuyBtn;
+            document.getElementById('superName').textContent = t.superName;
+            document.getElementById('superEffect').textContent = t.superEffect;
+            document.getElementById('superPrice').firstChild.textContent = t.superPricePrefix;
+            document.getElementById('superBuyBtn').textContent = t.superBuyBtn;
+            document.getElementById('leaderboardTitle').textContent = t.leaderboardTitle;
+            updateScore();
+            updateLocalLeaderboard();
+            saveGame();
+        }
+
+        // 初始化
+        loadGame();
+        updateLocalLeaderboard();
+    </script>
+</body>
+</html>
