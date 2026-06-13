@@ -4,100 +4,437 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VRoot | Termux PRoot 容器管理脚本</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        gh: {
-                            dark: '#0d1117',
-                            card: '#161b22',
-                            border: '#30363d',
-                            primary: '#2ea043',
-                            text: '#c9d1d9',
-                            muted: '#8b949e'
-                        }
-                    },
-                    fontFamily: {
-                        mono: ['Consolas', 'Monaco', 'monospace']
-                    }
-                }
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1a1a2e;
+            background: #f5f7fa;
+        }
+
+        /* 容器 */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid #e1e4e8;
+            padding: 16px 0;
+            z-index: 100;
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+
+        .version {
+            font-size: 12px;
+            background: #2ea043;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .github-btn {
+            padding: 8px 16px;
+            border: 1px solid #2ea043;
+            border-radius: 8px;
+            color: #2ea043;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .github-btn:hover {
+            background: #2ea043;
+            color: white;
+        }
+
+        /* 语言切换 */
+        .lang-switch {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            z-index: 100;
+            display: flex;
+            gap: 8px;
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-btn:hover {
+            border-color: #2ea043;
+        }
+
+        .lang-btn.active {
+            background: #2ea043;
+            color: white;
+            border-color: #2ea043;
+        }
+
+        /* 横幅 */
+        .hero {
+            padding: 60px 0;
+            background: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 100%);
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: bold;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #4a5568;
+            max-width: 600px;
+            margin: 0 auto 32px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: #2ea043;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #248c3b;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid #d1d5db;
+            color: #1a1a2e;
+            padding: 10px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: #2ea043;
+            color: #2ea043;
+        }
+
+        /* 区块 */
+        .section {
+            padding: 60px 0;
+        }
+
+        .section-alt {
+            background: white;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #1a1a2e;
+        }
+
+        /* 特性网格 */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1a1a2e;
+        }
+
+        .feature-card p {
+            color: #586069;
+            font-size: 14px;
+        }
+
+        /* 代码块 */
+        .code-block {
+            background: #1e1e2e;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            color: #c9d1d9;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* 表格 */
+        .command-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .command-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid #e1e4e8;
+        }
+
+        .command-table td:first-child {
+            font-family: monospace;
+            font-weight: 600;
+            width: 35%;
+        }
+
+        /* 更新日志 */
+        .changelog-item {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .changelog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .changelog-version {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2ea043;
+        }
+
+        .changelog-date {
+            color: #586069;
+            font-size: 14px;
+        }
+
+        .changelog-section {
+            margin-top: 16px;
+        }
+
+        .changelog-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a2e;
+        }
+
+        .changelog-list {
+            list-style: disc;
+            margin-left: 20px;
+            color: #586069;
+            font-size: 14px;
+        }
+
+        .changelog-list li {
+            margin: 6px 0;
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 32px 0;
+            border-top: 1px solid #e1e4e8;
+            color: #586069;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #2ea043;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+            .section {
+                padding: 40px 0;
+            }
+            .section-title {
+                font-size: 24px;
+            }
+            .lang-switch {
+                top: 70px;
+                right: 16px;
             }
         }
-    </script>
-    <style>
-        body { scroll-behavior: smooth; }
-        pre::-webkit-scrollbar { height: 6px; }
-        pre::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
     </style>
 </head>
-<body class="bg-gh-dark text-gh-text font-sans">
-    <!-- 导航栏 -->
-    <header class="sticky top-0 bg-gh-dark/95 backdrop-blur border-b border-gh-border z-20">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <h1 class="text-2xl font-bold">VRoot</h1>
-            </div>
-            <a href="https://github.com/Hoshino946493/VRoot" target="_blank" class="px-4 py-2 rounded-md border border-gh-primary text-gh-primary hover:bg-gh-primary hover:text-white transition-colors">
-                GitHub 仓库
-            </a>
-        </div>
-    </header>
+<body>
 
-    <!-- 首页横幅 -->
-    <section class="py-16 md:py-24 px-4">
-        <div class="container mx-auto max-w-4xl text-center">
-            <h2 class="text-[clamp(2rem,5vw,3.2rem)] font-bold mb-6">Termux PRoot 容器封装脚本</h2>
-            <p class="text-gh-muted text-lg md:text-xl mb-10 max-w-2xl mx-auto">
-                轻量化 Bash 脚本，封装复杂 PRoot 启动参数，多命令模式管理容器，兼容全版本 Android，开箱即用。
+    <!-- 语言切换 -->
+    <div class="lang-switch">
+        <button id="langZh" class="lang-btn active">中文</button>
+        <button id="langEn" class="lang-btn">English</button>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div>
+                <span class="logo">VRoot</span>
+                <span class="version">v1.0.2</span>
+            </div>
+            <a href="https://github.com/Hoshino946493/VRoot" target="_blank" class="github-btn">GitHub</a>
+        </div>
+    </nav>
+
+    <!-- 横幅 -->
+    <section class="hero">
+        <div class="container">
+            <h1>
+                <span data-zh="Termux PRoot 容器封装脚本" data-en="Termux PRoot Container Wrapper">Termux PRoot 容器封装脚本</span>
+            </h1>
+            <p>
+                <span data-zh="轻量化 Bash 脚本，封装复杂 PRoot 启动参数，多命令模式管理容器，兼容全版本 Android，开箱即用。"
+                      data-en="Lightweight Bash script wrapping complex PRoot parameters, multi-command container management, compatible with all Android versions.">
+                    轻量化 Bash 脚本，封装复杂 PRoot 启动参数，多命令模式管理容器，兼容全版本 Android，开箱即用。
+                </span>
             </p>
-            <div class="flex flex-wrap justify-center gap-4">
-                <a href="#install" class="bg-gh-primary px-6 py-3 rounded-md font-medium hover:bg-gh-primary/90 transition">
-                    快速安装
+            <div class="btn-group">
+                <a href="#install" class="btn-primary">
+                    <span data-zh="快速安装" data-en="Install">快速安装</span>
                 </a>
-                <a href="#usage" class="bg-gh-card border border-gh-border px-6 py-3 rounded-md font-medium hover:border-gh-primary transition">
-                    使用文档
+                <a href="#usage" class="btn-secondary">
+                    <span data-zh="使用文档" data-en="Usage">使用文档</span>
                 </a>
-                <a href="#features" class="bg-gh-card border border-gh-border px-6 py-3 rounded-md font-medium hover:border-gh-primary transition">
-                    功能特性
+                <a href="#changelog" class="btn-secondary">
+                    <span data-zh="更新日志" data-en="Changelog">更新日志</span>
                 </a>
             </div>
         </div>
     </section>
 
     <!-- 功能特性 -->
-    <section id="features" class="py-14 bg-gh-card/40">
-        <div class="container mx-auto px-4 max-w-4xl">
-            <h3 class="text-2xl font-bold mb-10 text-center">核心特性</h3>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-gh-card p-6 rounded-lg border border-gh-border">
-                    <h4 class="text-lg font-semibold mb-2">多命令模式</h4>
-                    <p class="text-gh-muted">支持指定目录启动、容器名快捷登录、精简别名，同时兼容传统路径调用方式。</p>
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">
+                <span data-zh="核心特性" data-en="Features">核心特性</span>
+            </h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3><span data-zh="多命令模式" data-en="Multi-Command Mode">多命令模式</span></h3>
+                    <p><span data-zh="支持指定目录启动、容器名快捷登录、精简别名，同时兼容传统路径调用方式。"
+                            data-en="Support directory startup, quick login with container name, shortcuts, and legacy path calls.">
+                        支持指定目录启动、容器名快捷登录、精简别名，同时兼容传统路径调用方式。
+                    </span></p>
                 </div>
-                <div class="bg-gh-card p-6 rounded-lg border border-gh-border">
-                    <h4 class="text-lg font-semibold mb-2">全安卓版本适配</h4>
-                    <p class="text-gh-muted">自动检测 Android 版本，为 Android 8.0 以下系统自动生成 DNS 配置，解决网络问题。</p>
+                <div class="feature-card">
+                    <h3><span data-zh="全安卓版本适配" data-en="Android Version Support">全安卓版本适配</span></h3>
+                    <p><span data-zh="自动检测 Android 版本，为 Android 8.0 以下系统自动生成 DNS 配置，解决网络问题。"
+                            data-en="Auto-detect Android version, generate DNS config for Android < 8.">
+                        自动检测 Android 版本，为 Android 8.0 以下系统自动生成 DNS 配置，解决网络问题。
+                    </span></p>
                 </div>
-                <div class="bg-gh-card p-6 rounded-lg border border-gh-border">
-                    <h4 class="text-lg font-semibold mb-2">预置 PRoot 参数</h4>
-                    <p class="text-gh-muted">内置挂载 /dev /sys /proc /sdcard /storage 等目录，环境变量自动配置，无需手动编写参数。</p>
+                <div class="feature-card">
+                    <h3><span data-zh="彩色输出" data-en="Colored Output">彩色输出</span></h3>
+                    <p><span data-zh="所有提示信息都有颜色区分，信息类型一目了然，使用体验更友好。"
+                            data-en="All messages have color coding for better readability and user experience.">
+                        所有提示信息都有颜色区分，信息类型一目了然，使用体验更友好。
+                    </span></p>
                 </div>
-                <div class="bg-gh-card p-6 rounded-lg border border-gh-border">
-                    <h4 class="text-lg font-semibold mb-2">统一容器目录</h4>
-                    <p class="text-gh-muted">默认容器存放于 <code class="bg-gh-dark px-1 rounded">~/.vroot/containers</code>，集中管理所有 RootFS 镜像。</p>
+                <div class="feature-card">
+                    <h3><span data-zh="中英文双语" data-en="Bilingual Support">中英文双语</span></h3>
+                    <p><span data-zh="首次运行可选择语言，支持中文和英文，语言设置持久化保存。"
+                            data-en="First run language selection, Chinese/English support, persistent config.">
+                        首次运行可选择语言，支持中文和英文，语言设置持久化保存。
+                    </span></p>
+                </div>
+                <div class="feature-card">
+                    <h3><span data-zh="预置 PRoot 参数" data-en="Preset PRoot Params">预置 PRoot 参数</span></h3>
+                    <p><span data-zh="内置挂载 /dev /sys /proc /sdcard /storage 等目录，环境变量自动配置。"
+                            data-en="Built-in mounts for /dev, /sys, /proc, /sdcard, /storage, auto env config.">
+                        内置挂载 /dev /sys /proc /sdcard /storage 等目录，环境变量自动配置。
+                    </span></p>
+                </div>
+                <div class="feature-card">
+                    <h3><span data-zh="统一容器目录" data-en="Unified Container Dir">统一容器目录</span></h3>
+                    <p><span data-zh="默认容器存放于 ~/.vroot/containers，集中管理所有 RootFS 镜像。"
+                            data-en="Default container dir: ~/.vroot/containers for centralized management.">
+                        默认容器存放于 ~/.vroot/containers，集中管理所有 RootFS 镜像。
+                    </span></p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- 安装教程 -->
-    <section id="install" class="py-14">
-        <div class="container mx-auto px-4 max-w-4xl">
-            <h3 class="text-2xl font-bold mb-6">安装部署</h3>
-            <div class="bg-gh-card rounded-lg border border-gh-border p-6">
-                <p class="mb-4 text-gh-muted">在 Termux 终端依次执行以下命令完成安装：</p>
-                <pre class="bg-gh-dark p-4 rounded-md overflow-x-auto font-mono text-green-400"><code># 克隆仓库
+    <section id="install" class="section section-alt">
+        <div class="container">
+            <h2 class="section-title">
+                <span data-zh="安装部署" data-en="Installation">安装部署</span>
+            </h2>
+            <div class="code-block">
+                <pre><code># 克隆仓库
 git clone https://github.com/Hoshino946493/VRoot.git
 cd VRoot
 
@@ -106,51 +443,163 @@ chmod +x vroot
 
 # 全局安装（推荐，任意目录可直接调用 vroot）
 cp vroot $PREFIX/bin/</code></pre>
-                <p class="mt-4 text-gh-muted">安装完成后，输入 <code class="bg-gh-dark px-1 rounded">vroot help</code> 查看帮助文档。</p>
             </div>
+            <p style="margin-top: 16px; color: #586069;">
+                <span data-zh="安装完成后，输入" data-en="After installation, run">安装完成后，输入</span>
+                <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">vroot help</code>
+                <span data-zh="查看帮助文档。" data-en="to view help.">查看帮助文档。</span>
+            </p>
         </div>
     </section>
 
     <!-- 使用文档 -->
-    <section id="usage" class="py-14 bg-gh-card/40">
-        <div class="container mx-auto px-4 max-w-4xl">
-            <h3 class="text-2xl font-bold mb-6">使用说明</h3>
+    <section id="usage" class="section">
+        <div class="container">
+            <h2 class="section-title">
+                <span data-zh="使用说明" data-en="Usage Guide">使用说明</span>
+            </h2>
 
-            <!-- 命令总览 -->
-            <div class="bg-gh-card rounded-lg border border-gh-border p-6 mb-8">
-                <h4 class="text-lg font-semibold mb-4">命令总览</h4>
-                <table class="w-full text-gh-muted">
-                    <tr class="border-b border-gh-border">
-                        <td class="py-3 font-mono w-1/3">msrfs &lt;路径&gt; [用户名]</td>
-                        <td class="py-3">手动指定 RootFS 目录并登录容器，默认用户 root</td>
-                    </tr>
-                    <tr class="border-b border-gh-border">
-                        <td class="py-3 font-mono">login / l &lt;容器名&gt; [用户名]</td>
-                        <td class="py-3">快捷登录 ~/.vroot/containers 下的容器，l 为简写</td>
-                    </tr>
-                    <tr class="border-b border-gh-border">
-                        <td class="py-3 font-mono">help / h</td>
-                        <td class="py-3">查看帮助信息</td>
-                    </tr>
-                    <tr>
-                        <td class="py-3 font-mono">&lt;目录路径&gt; [用户名]</td>
-                        <td class="py-3">兼容旧用法：直接传入目录启动容器</td>
-                    </tr>
+            <div style="background: white; border: 1px solid #e1e4e8; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">
+                    <span data-zh="命令总览" data-en="Commands">命令总览</span>
+                </h3>
+                <table class="command-table">
+                    <tr><td>msrfs &lt;路径&gt; [用户名]</td><td><span data-zh="手动指定 RootFS 目录并登录容器，默认用户 root" data-en="Manual RootFS dir login, default user root">手动指定 RootFS 目录并登录容器，默认用户 root</span></td></tr>
+                    <tr><td>login / l &lt;容器名&gt; [用户名]</td><td><span data-zh="快捷登录 ~/.vroot/containers 下的容器，l 为简写" data-en="Quick login to container in ~/.vroot/containers, 'l' as shortcut">快捷登录 ~/.vroot/containers 下的容器，l 为简写</span></td></tr>
+                    <tr><td>help / h</td><td><span data-zh="查看帮助信息" data-en="Show help">查看帮助信息</span></td></tr>
+                    <tr><td>&lt;目录路径&gt; [用户名]</td><td><span data-zh="兼容旧用法：直接传入目录启动容器" data-en="Legacy usage: direct path startup">兼容旧用法：直接传入目录启动容器</span></td></tr>
                 </table>
             </div>
 
-            <!-- 示例 -->
-            <div class="bg-gh-card rounded-lg border border-gh-border p-6 mb-8">
-                <h4 class="text-lg font-semibold mb-4">使用示例</h4>
-
-                <div class="mb-6">
-                    <p class="text-gh-muted mb-2">1. 手动指定 RootFS 目录登录</p>
-                    <pre class="bg-gh-dark p-4 rounded-md overflow-x-auto font-mono text-green-400"><code># 登录 ~/ubuntu-fs，用户 sensei
+            <div style="background: white; border: 1px solid #e1e4e8; border-radius: 12px; padding: 24px;">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">
+                    <span data-zh="使用示例" data-en="Examples">使用示例</span>
+                </h3>
+                <div class="code-block">
+                    <pre><code># 手动指定路径登录
 vroot msrfs ~/ubuntu-fs sensei
 
-# 登录 ~/debian-fs，默认 root 用户
-vroot msrfs ~/debian-fs</code></pre>
-                </div>
+# 快捷登录容器
+vroot login ubuntu-fs
+vroot l debian-fs root
 
-                <div class="mb-6">
-                    <p class="text-gh-muted mb-2">2. 快捷登录容器（容器存放于 ~/.vroot/containers）
+# 兼容旧用法
+vroot ~/alpine-fs
+
+# 查看帮助
+vroot help</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 更新日志 -->
+    <section id="changelog" class="section section-alt">
+        <div class="container">
+            <h2 class="section-title">
+                <span data-zh="更新日志" data-en="Changelog">更新日志</span>
+            </h2>
+
+            <!-- v1.0.2 -->
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version">v1.0.2</span>
+                    <span class="changelog-date">2026-06-13</span>
+                </div>
+                <div class="changelog-section">
+                    <h4><span data-zh="新功能" data-en="New Features">新功能</span></h4>
+                    <ul class="changelog-list">
+                        <li><span data-zh="彩色输出：所有提示信息都有颜色区分，更加直观" data-en="Colored output: all messages have color coding">彩色输出：所有提示信息都有颜色区分，更加直观</span></li>
+                        <li><span data-zh="中英文双语：首次运行可选择语言，支持中文和英文" data-en="Bilingual: first run language selection">中英文双语：首次运行可选择语言，支持中文和英文</span></li>
+                        <li><span data-zh="语言配置：语言设置持久化保存在 ~/.vroot/lang.conf" data-en="Language config: persisted in ~/.vroot/lang.conf">语言配置：语言设置持久化保存在 ~/.vroot/lang.conf</span></li>
+                    </ul>
+                </div>
+                <div class="changelog-section">
+                    <h4><span data-zh="修复" data-en="Fixes">修复</span></h4>
+                    <ul class="changelog-list">
+                        <li><span data-zh="修复语言配置文件读取时的 command not found 错误" data-en="Fixed command not found error when reading config">修复语言配置文件读取时的 command not found 错误</span></li>
+                        <li><span data-zh="优化 Android 版本检测逻辑" data-en="Optimized Android version detection">优化 Android 版本检测逻辑</span></li>
+                    </ul>
+                </div>
+                <div class="changelog-section">
+                    <h4><span data-zh="其他" data-en="Other">其他</span></h4>
+                    <ul class="changelog-list">
+                        <li><span data-zh="更新 README 添加英文版说明" data-en="Updated README with English version">更新 README 添加英文版说明</span></li>
+                        <li><span data-zh="代码结构优化" data-en="Code structure optimization">代码结构优化</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- v1.0.1 -->
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version" style="color: #586069;">v1.0.1</span>
+                    <span class="changelog-date">2026-05-31</span>
+                </div>
+                <ul class="changelog-list">
+                    <li><span data-zh="修复执行权限问题" data-en="Fixed execute permission issue">修复执行权限问题</span></li>
+                    <li><span data-zh="优化命令说明为 Markdown 表格" data-en="Optimized command descriptions as Markdown table">优化命令说明为 Markdown 表格</span></li>
+                </ul>
+            </div>
+
+            <!-- v1.0 -->
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version" style="color: #586069;">v1.0</span>
+                    <span class="changelog-date">2026-05-24</span>
+                </div>
+                <ul class="changelog-list">
+                    <li><span data-zh="首次发布" data-en="Initial release">首次发布</span></li>
+                    <li><span data-zh="基础 PRoot 封装功能" data-en="Basic PRoot wrapper functionality">基础 PRoot 封装功能</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>VRoot - Termux PRoot 容器管理工具</p>
+            <p style="margin-top: 8px;">
+                <a href="https://github.com/Hoshino946493/VRoot">GitHub</a> | 
+                <a href="https://github.com/Hoshino946493/VRoot/releases">Releases</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- 语言切换脚本 -->
+    <script>
+        const zhBtn = document.getElementById('langZh');
+        const enBtn = document.getElementById('langEn');
+        
+        function setLanguage(lang) {
+            const elements = document.querySelectorAll('[data-zh]');
+            elements.forEach(el => {
+                if (lang === 'zh') {
+                    el.textContent = el.getAttribute('data-zh');
+                } else {
+                    el.textContent = el.getAttribute('data-en');
+                }
+            });
+            
+            if (lang === 'zh') {
+                zhBtn.classList.add('active');
+                enBtn.classList.remove('active');
+                document.documentElement.lang = 'zh-CN';
+            } else {
+                enBtn.classList.add('active');
+                zhBtn.classList.remove('active');
+                document.documentElement.lang = 'en';
+            }
+            
+            localStorage.setItem('vroot_lang', lang);
+        }
+        
+        const savedLang = localStorage.getItem('vroot_lang') || 'zh';
+        setLanguage(savedLang);
+        
+        zhBtn.addEventListener('click', () => setLanguage('zh'));
+        enBtn.addEventListener('click', () => setLanguage('en'));
+    </script>
+</body>
+</html>
