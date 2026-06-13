@@ -263,7 +263,14 @@
         .changelog-version {
             font-size: 20px;
             font-weight: bold;
+        }
+
+        .changelog-version.latest {
             color: #2ea043;
+        }
+
+        .changelog-version.old {
+            color: #586069;
         }
 
         .changelog-date {
@@ -342,7 +349,7 @@
         <div class="container">
             <div>
                 <span class="logo">VRoot</span>
-                <span class="version">v1.0.2</span>
+                <span class="version">v1.0.3</span>
             </div>
             <a href="https://github.com/Hoshino946493/VRoot" target="_blank" class="github-btn">GitHub</a>
         </div>
@@ -500,10 +507,24 @@ vroot help</code></pre>
                 <span data-zh="更新日志" data-en="Changelog">更新日志</span>
             </h2>
 
+            <!-- v1.0.3 最新版 -->
+            <div class="changelog-item">
+                <div class="changelog-header">
+                    <span class="changelog-version latest">v1.0.3</span>
+                    <span class="changelog-date">2026-01-15</span>
+                </div>
+                <div class="changelog-section">
+                    <h4><span data-zh="修复" data-en="Fixes">修复</span></h4>
+                    <ul class="changelog-list">
+                        <li><span data-zh="修复帮助信息颜色显示问题，彩色输出现在正常工作" data-en="Fixed color display issue in help message, colored output now works properly">修复帮助信息颜色显示问题，彩色输出现在正常工作</span></li>
+                    </ul>
+                </div>
+            </div>
+
             <!-- v1.0.2 -->
             <div class="changelog-item">
                 <div class="changelog-header">
-                    <span class="changelog-version">v1.0.2</span>
+                    <span class="changelog-version old">v1.0.2</span>
                     <span class="changelog-date">2026-06-13</span>
                 </div>
                 <div class="changelog-section">
@@ -533,7 +554,7 @@ vroot help</code></pre>
             <!-- v1.0.1 -->
             <div class="changelog-item">
                 <div class="changelog-header">
-                    <span class="changelog-version" style="color: #586069;">v1.0.1</span>
+                    <span class="changelog-version old">v1.0.1</span>
                     <span class="changelog-date">2026-05-31</span>
                 </div>
                 <ul class="changelog-list">
@@ -545,7 +566,7 @@ vroot help</code></pre>
             <!-- v1.0 -->
             <div class="changelog-item">
                 <div class="changelog-header">
-                    <span class="changelog-version" style="color: #586069;">v1.0</span>
+                    <span class="changelog-version old">v1.0</span>
                     <span class="changelog-date">2026-05-24</span>
                 </div>
                 <ul class="changelog-list">
